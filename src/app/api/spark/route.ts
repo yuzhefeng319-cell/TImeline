@@ -1,97 +1,74 @@
-import { deepseekChat } from "@/lib/deepseek";
-import { SPARK_EXTRACT_PROMPT } from "@/lib/prompts";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-type IncomingMessage = {
-  role: "user" | "assistant";
-  content: string;
-};
+export const runtime = "nodejs";
 
-function extractJson(text: string) {
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) return null;
+export async function POST(req: NextRequest) {
   try {
-    return JSON.parse(match[0]) as Record<string, unknown>;
-  } catch {
-    return null;
+    const { messages } = await req.json();
+
+    const extractPrompt = `
+分析用户最后一句话。如果分享了具体记忆/经历/情绪，提炼JSON:
+{
+  "has_card": true,
+  "chapter": "章节名称（如：学生时代/初入职场）",
+  "card_data": {
+    "title": "标题（10字内）",
+    "time_anchor": "时间/场景",
+    "fact_summary": "客观事实",
+    "emotional_peak": "核心情绪",
+    "inner_insight": "内心感悟",
+    "keywords": ["标签1", "标签2"]
   }
 }
+没分享记忆则返回: { "has_card": false }
+    `.trim();
 
-export async function POST(request: Request) {
-  try {
-    const body = (await request.json()) as { messages?: IncomingMessage[] };
-
-    const messages = (body.messages ?? []).slice(-8);
-
-    if (messages.length < 2) {
-      return NextResponse.json({ skip: true });
-    }
-
-    const response = await deepseekChat({
-      messages: [
-        { role: "system", content: SPARK_EXTRACT_PROMPT },
-        {
-          role: "user",
-          content: `请根据以下对话判断是否生成人生火花卡片：\n\n${messages
-            .map((item) => `${item.role === "user" ? "用户" : "朋友"}：${item.content}`)
-            .join("\n")}`,
-        },
-      ],
-    });
-
-    const data = (await response.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
-    const content = data.choices?.[0]?.message?.content ?? "";
-    const parsed: any = JSON.parse(cardContent || "{}");
-
-if (parsed && parsed.has_card) {
-  card = {
-    event: parsed.event || parsed.title || "未命名故事",
-    title: parsed.title || "未命名故事",
-    emotion: parsed.emotion || parsed.emotional_peak || "",
-    insight: parsed.insight || parsed.inner_insight || "",
-    time_anchor: parsed.time_anchor || "",
-    fact_summary: parsed.fact_summary || "",
-    emotional_peak: parsed.emotional_peak || "",
-    inner_insight: parsed.inner_insight || "",
-    keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],
-  };
-}
-
-    const rawCard = parsed.card_data ?? parsed;
-    const event = rawCard.event != null ? String(rawCard.event).trim() : null;
-    const title = String(rawCard.title ?? "").trim();
-    const emotion = String(rawCard.emotion ?? "").trim();
-    const insight = String(rawCard.insight ?? rawCard.inner_insight ?? "").trim();
-    const timeAnchor = rawCard.time_anchor != null ? String(rawCard.time_anchor).trim() : null;
-    const factSummary = rawCard.fact_summary != null ? String(rawCard.fact_summary).trim() : null;
-    const emotionalPeak = rawCard.emotional_peak != null ? String(rawCard.emotional_peak).trim() : null;
-    const innerInsight = rawCard.inner_insight != null ? String(rawCard.inner_insight).trim() : null;
-    const keywords = Array.isArray(rawCard.keywords)
-      ? rawCard.keywords.map((k: unknown) => String(k ?? "")).filter(Boolean)
-      : undefined;
-
-    if (!title || !emotion) {
-      return NextResponse.json({ skip: true });
-    }
-
-    return NextResponse.json({
-      card: {
-        title,
-        emotion,
-        insight,
-        time: new Date().toISOString(),
-        event,
-        time_anchor: timeAnchor,
-        fact_summary: factSummary,
-        emotional_peak: emotionalPeak,
-        inner_insight: innerInsight,
-        keywords,
+    const response = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        Authorization: `Bearer ${process.env.DEEPSEEK_API_KEY}`,
       },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages: [{ role: "system", content: extractPrompt }, ...messages.slice(-2)],
+        response_format: { type: "json_object" },
+        stream: false,
+      }),
     });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "卡片提炼失败。";
-    return NextResponse.json({ error: message, skip: true }, { status: 500 });
+
+    if (!response.ok) {
+      return NextResponse.json({ has_card: false, error: "API Failed" });
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const decoder = new TextDecoder("utf-8");
+    const jsonString = decoder.decode(arrayBuffer);
+    const data = JSON.parse(jsonString);
+
+    const cardContent = data.choices?.[0]?.message?.content || "{}";
+    const parsed: any = JSON.parse(cardContent);
+
+    let card: any = null;
+
+    if (parsed && (parsed.has_card === true || parsed.card_data)) {
+      const cardData = parsed.card_data || parsed;
+      card = {
+        has_card: true,
+        chapter: parsed.chapter || "人生回忆片段",
+        card_data: {
+          title: cardData.title || cardData.event || "未命名回忆",
+          time_anchor: cardData.time_anchor || "某个时刻",
+          fact_summary: cardData.fact_summary || "",
+          emotional_peak: cardData.emotional_peak || cardData.emotion || "",
+          inner_insight: cardData.inner_insight || cardData.insight || "",
+          keywords: Array.isArray(cardData.keywords) ? cardData.keywords : [],
+        },
+      };
+    }
+
+    return NextResponse.json({ card: card });
+  } catch (error: any) {
+    return NextResponse.json({ has_card: false, error: error.message });
   }
 }
