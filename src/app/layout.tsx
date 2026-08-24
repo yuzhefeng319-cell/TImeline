@@ -14,6 +14,7 @@ export default function RootLayout({
     <html lang="zh-CN">
       <head>
         <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </head>
       <body style={{ margin: 0, padding: 0 }}>{children}</body>
     </html>
