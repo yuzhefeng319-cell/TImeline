@@ -43,11 +43,21 @@ export async function POST(request: Request) {
       choices?: { message?: { content?: string } }[];
     };
     const content = data.choices?.[0]?.message?.content ?? "";
-    const parsed = extractJson(content);
+    const parsed: any = JSON.parse(cardContent || "{}");
 
-    if (!parsed || parsed.skip === true) {
-      return NextResponse.json({ skip: true });
-    }
+if (parsed && parsed.has_card) {
+  card = {
+    event: parsed.event || parsed.title || "未命名故事",
+    title: parsed.title || "未命名故事",
+    emotion: parsed.emotion || parsed.emotional_peak || "",
+    insight: parsed.insight || parsed.inner_insight || "",
+    time_anchor: parsed.time_anchor || "",
+    fact_summary: parsed.fact_summary || "",
+    emotional_peak: parsed.emotional_peak || "",
+    inner_insight: parsed.inner_insight || "",
+    keywords: Array.isArray(parsed.keywords) ? parsed.keywords : [],
+  };
+}
 
     const rawCard = parsed.card_data ?? parsed;
     const event = rawCard.event != null ? String(rawCard.event).trim() : null;
