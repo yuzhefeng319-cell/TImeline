@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-noto-sans);
+  --font-serif: var(--font-noto-serif);
+
+  @keyframes fadeSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes cardGlow {
+    0%,
+    100% {
+      box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.25), 0 12px 30px -20px rgba(92, 64, 51, 0.45);
+    }
+    50% {
+      box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.4), 0 16px 36px -18px rgba(92, 64, 51, 0.55);
+    }
+  }
+
+  @keyframes progress {
+    0% {
+      transform: translateX(-100%);
+    }
+    50% {
+      transform: translateX(200%);
+    }
+    100% {
+      transform: translateX(-100%);
+    }
+  }
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(232, 214, 193, 0.55), transparent 36%),
+    radial-gradient(circle at top right, rgba(214, 196, 176, 0.4), transparent 32%),
+    #f7f4ef;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 132, 110, 0.35);
+  border-radius: 999px;
+}
