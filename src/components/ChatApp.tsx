@@ -30,6 +30,7 @@ export function ChatApp() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [storyline, setStoryline] = useState<StoryItem[]>([]);
+  const [showSidebar, setShowSidebar] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -82,9 +83,36 @@ export function ChatApp() {
   };
 
   return (
-    <div style={{ width: "100%", height: "100vh", display: "flex", backgroundColor: "#fafaf9", margin: 0 }}>
+    <div style={{ width: "100%", minHeight: "100vh", display: "flex", backgroundColor: "#fafaf9", margin: 0 }}>
+      {/* Mobile Sidebar Toggle */}
+      <button
+        onClick={() => setShowSidebar(!showSidebar)}
+        style={{
+          position: "fixed",
+          top: "16px",
+          right: "16px",
+          zIndex: 50,
+          width: "44px",
+          height: "44px",
+          borderRadius: "12px",
+          backgroundColor: "#1c1917",
+          border: "none",
+          color: "#fff",
+          cursor: "pointer",
+          display: "none",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+        }}
+        className="sidebar-toggle"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M4 6h16M4 12h16M4 18h16" strokeLinecap="round"/>
+        </svg>
+      </button>
+
       {/* Chat Panel - Left */}
-      <div style={{ flex: "1 1 0%", display: "flex", flexDirection: "column", borderRight: "1px solid #e7e5e4", height: "100vh", backgroundColor: "#fff", minWidth: 0 }}>
+      <div style={{ flex: "1 1 0%", display: "flex", flexDirection: "column", borderRight: "1px solid #e7e5e4", minHeight: "100vh", backgroundColor: "#fff", minWidth: 0 }} className="chat-panel">
         {/* Header */}
         <div style={{ padding: "20px 32px", borderBottom: "1px solid #e7e5e4", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
@@ -121,7 +149,7 @@ export function ChatApp() {
                 color: m.role === "user" ? "#fafaf9" : "#44403c",
                 fontSize: "15px",
                 lineHeight: 1.6,
-                maxWidth: "70%",
+                maxWidth: "85%",
                 marginLeft: m.role === "user" ? "auto" : "0"
               }}>
                 {m.content}
@@ -138,7 +166,7 @@ export function ChatApp() {
         </div>
 
         {/* Input */}
-        <div style={{ padding: "24px 32px", borderTop: "1px solid #e7e5e4" }}>
+        <div style={{ padding: "16px 20px", borderTop: "1px solid #e7e5e4" }}>
           <div style={{ display: "flex", gap: "12px", alignItems: "flex-end" }}>
             <textarea
               value={input}
@@ -178,7 +206,8 @@ export function ChatApp() {
                 cursor: isLoading || !input.trim() ? "not-allowed" : "pointer",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center"
+                justifyContent: "center",
+                flexShrink: 0
               }}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -190,8 +219,8 @@ export function ChatApp() {
         </div>
       </div>
 
-      {/* Sidebar - Right */}
-      <div style={{ width: "320px", display: "flex", flexDirection: "column", height: "100vh", backgroundColor: "#fff" }}>
+      {/* Sidebar - Right (Desktop) */}
+      <div style={{ width: "320px", display: "flex", flexDirection: "column", minHeight: "100vh", backgroundColor: "#fff" }} className="sidebar-desktop">
         <div style={{ padding: "20px 28px", borderBottom: "1px solid #f5f5f4", display: "flex", alignItems: "center", gap: "12px" }}>
           <div style={{ width: "24px", height: "1px", backgroundColor: "#d6d3d1" }} />
           <span style={{ fontSize: "12px", letterSpacing: "0.15em", textTransform: "uppercase", color: "#78716c", fontFamily: "system-ui", fontWeight: 500 }}>Storyline</span>
@@ -247,12 +276,137 @@ export function ChatApp() {
         </div>
       </div>
 
+      {/* Mobile Sidebar Overlay */}
+      {showSidebar && (
+        <>
+          <div
+            onClick={() => setShowSidebar(false)}
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0,0,0,0.5)",
+              zIndex: 60
+            }}
+          />
+          <div style={{
+            position: "fixed",
+            top: 0,
+            right: 0,
+            width: "85%",
+            maxWidth: "360px",
+            height: "100vh",
+            backgroundColor: "#fff",
+            zIndex: 70,
+            display: "flex",
+            flexDirection: "column",
+            boxShadow: "-4px 0 20px rgba(0,0,0,0.1)"
+          }}>
+            <div style={{ padding: "20px 28px", borderBottom: "1px solid #f5f5f4", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ width: "24px", height: "1px", backgroundColor: "#d6d3d1" }} />
+                <span style={{ fontSize: "12px", letterSpacing: "0.15em", textTransform: "uppercase", color: "#78716c", fontFamily: "system-ui", fontWeight: 500 }}>Storyline</span>
+              </div>
+              <button
+                onClick={() => setShowSidebar(false)}
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "8px",
+                  backgroundColor: "#f5f5f4",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#78716c" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+
+            <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px" }}>
+              {storyline.length === 0 ? (
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", textAlign: "center", padding: "16px" }}>
+                  <div style={{ width: "48px", height: "48px", borderRadius: "50%", backgroundColor: "#f5f5f4", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a8a29e" strokeWidth="1.5">
+                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <p style={{ fontSize: "14px", color: "#a8a29e", fontFamily: "Georgia" }}>聊一段深刻的记忆</p>
+                  <p style={{ fontSize: "12px", color: "#d6d3d1", marginTop: "4px", fontFamily: "system-ui" }}>它会出现在这里</p>
+                </div>
+              ) : (
+                <div style={{ position: "relative", paddingLeft: "20px" }}>
+                  <div style={{ position: "absolute", left: "7px", top: "8px", bottom: "8px", width: "1px", backgroundColor: "#e7e5e4" }} />
+                  {storyline.map((item) => (
+                    <div key={item.id} style={{ position: "relative", marginBottom: "32px" }}>
+                      <div style={{ position: "absolute", left: "-9px", top: "6px", width: "12px", height: "12px", borderRadius: "50%", backgroundColor: "#fff", border: "2px solid #d6d3d1", zIndex: 1 }} />
+                      <div style={{ backgroundColor: "#fafaf9", border: "1px solid #e7e5e4", borderRadius: "12px", padding: "16px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                          <span style={{ fontSize: "9px", letterSpacing: "0.2em", textTransform: "uppercase", color: "#78716c", fontFamily: "system-ui" }}>{item.chapter}</span>
+                          <div style={{ flex: 1, height: "1px", backgroundColor: "#e7e5e4" }} />
+                          <span style={{ fontSize: "9px", color: "#d6d3d1", fontFamily: "system-ui" }}>{item.card_data.time_anchor}</span>
+                        </div>
+                        <h3 style={{ fontSize: "14px", fontWeight: 500, color: "#1c1917", lineHeight: 1.4, margin: "0 0 12px 0" }}>{item.card_data.title}</h3>
+                        <div style={{ marginBottom: "8px" }}>
+                          <div style={{ fontSize: "9px", letterSpacing: "0.15em", textTransform: "uppercase", color: "#78716c", fontFamily: "system-ui", marginBottom: "2px" }}>事实</div>
+                          <p style={{ fontSize: "12px", color: "#57534e", lineHeight: 1.5, margin: 0 }}>{item.card_data.fact_summary}</p>
+                        </div>
+                        <div style={{ marginBottom: "8px" }}>
+                          <div style={{ fontSize: "9px", letterSpacing: "0.15em", textTransform: "uppercase", color: "#78716c", fontFamily: "system-ui", marginBottom: "2px" }}>情绪</div>
+                          <p style={{ fontSize: "12px", color: "#57534e", lineHeight: 1.5, margin: 0 }}>{item.card_data.emotional_peak}</p>
+                        </div>
+                        <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #e7e5e4" }}>
+                          <p style={{ fontSize: "12px", color: "#57534e", fontStyle: "italic", lineHeight: 1.5, margin: 0 }}>&ldquo;{item.card_data.inner_insight}&rdquo;</p>
+                        </div>
+                        {item.card_data.keywords?.length > 0 && (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "12px", paddingTop: "12px", borderTop: "1px solid #f5f5f4" }}>
+                            {item.card_data.keywords.map((kw, i) => (
+                              <span key={i} style={{ fontSize: "9px", color: "#a8a29e", fontFamily: "system-ui" }}>#{kw}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
       <style>{`
         @keyframes bounce {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-4px); }
         }
         textarea:focus { border-color: #a8a29e !important; }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+          .sidebar-desktop {
+            display: none !important;
+          }
+          .sidebar-toggle {
+            display: flex !important;
+          }
+          .chat-panel {
+            min-height: 100vh !important;
+            border-right: none !important;
+          }
+        }
+        
+        @media (min-width: 769px) {
+          .sidebar-toggle {
+            display: none !important;
+          }
+        }
       `}</style>
     </div>
   );
